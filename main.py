@@ -2,11 +2,10 @@ import os
 import requests
 import xml.etree.ElementTree as ET
 from discord.ext import tasks, commands
-from dotenv import load_dotenv
 from flask import Flask
 from threading import Thread
 
-# -------------------- KEEP-ALIVE SERVER --------------------
+# -------------------- KEEP BOT ONLINE --------------------
 app = Flask('')
 
 @app.route('/')
@@ -17,10 +16,13 @@ def run_server():
     app.run(host='0.0.0.0', port=3000)
 
 # -------------------- DISCORD BOT --------------------
-load_dotenv()  # loads .env
-TOKEN = os.getenv("TOKEN")  # read token from .env
+# Read token from GitHub secret
+TOKEN = os.getenv("DISCORD_TOKEN")
 
+# Replace with your Discord channel ID
 CHANNEL_ID = 1149957260521512970
+
+# Replace with your YouTube channel ID
 YT_CHANNEL = "UCFcUH5jvyTQomYz-sfKjs2Q"
 
 bot = commands.Bot(command_prefix="!", intents=commands.Intents.all())
@@ -31,7 +33,6 @@ def get_latest_video_id():
         url = f"https://www.youtube.com/feeds/videos.xml?channel_id={YT_CHANNEL}"
         xml_data = requests.get(url).text
         root = ET.fromstring(xml_data)
-
         for child in root.iter('{http://www.youtube.com/xml/schemas/2015}videoId'):
             return child.text
     except Exception as e:
@@ -64,5 +65,6 @@ async def on_ready():
     check_upload.start()
 
 if __name__ == "__main__":
+    # Start Flask server to keep the bot online
     Thread(target=run_server).start()
     bot.run(TOKEN)
