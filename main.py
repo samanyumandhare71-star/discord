@@ -1,9 +1,10 @@
 import os
 import requests
 import xml.etree.ElementTree as ET
-from discord.ext import commands, tasks
-from flask import Flask
+from discord.ext import tasks, commands
 from dotenv import load_dotenv
+from flask import Flask
+from threading import Thread
 
 # -------------------- KEEP-ALIVE SERVER --------------------
 app = Flask('')
@@ -16,8 +17,8 @@ def run_server():
     app.run(host='0.0.0.0', port=3000)
 
 # -------------------- DISCORD BOT --------------------
-load_dotenv()
-TOKEN = os.getenv("TOKEN")  # Loaded from .env
+load_dotenv()  # loads .env
+TOKEN = os.getenv("TOKEN")  # read token from .env
 
 CHANNEL_ID = 1149957260521512970
 YT_CHANNEL = "UCFcUH5jvyTQomYz-sfKjs2Q"
@@ -31,7 +32,6 @@ def get_latest_video_id():
         xml_data = requests.get(url).text
         root = ET.fromstring(xml_data)
 
-        # YouTube <yt:videoId>
         for child in root.iter('{http://www.youtube.com/xml/schemas/2015}videoId'):
             return child.text
     except Exception as e:
@@ -51,7 +51,7 @@ async def check_upload():
             await channel.send(
                 f"@everyone\n"
                 f"**Roti Gaming just uploaded a new video on YouTube!** 🔥\n"
-                f"Click here to watch it 👇\n"
+                f"Click here to watch 👇\n"
                 f"https://www.youtube.com/watch?v={vid}"
             )
             print("Posted new upload alert!")
@@ -60,10 +60,9 @@ async def check_upload():
 
 @bot.event
 async def on_ready():
-    print(f"Logged in as {bot.user}")
+    print(f"Bot logged in as {bot.user}")
     check_upload.start()
 
 if __name__ == "__main__":
-    from threading import Thread
     Thread(target=run_server).start()
     bot.run(TOKEN)
